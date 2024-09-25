@@ -1,0 +1,1 @@
+export const RPC_URL="https://solana-devnet.g.alchemy.com/v2/_D60iTxHlFPFtsDfw5l66yaD6Fb8LCjc";
