@@ -1,4 +1,4 @@
 
 export const backendurl = "http://localhost:3000";
-export const userfrontend = "http://localhost:3001";
-export const workerfrontend = "http://localhost:3002";
+export const userfrontend = "https://label3-gamma.vercel.app/";
+export const workerfrontend = "https://label3-worker-frontend.vercel.app/";
