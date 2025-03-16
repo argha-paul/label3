@@ -11,9 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a, _b, _c;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
-const tweetnacl_1 = __importDefault(require("tweetnacl"));
 const client_1 = require("@prisma/client");
 const express_1 = require("express");
 const client_s3_1 = require("@aws-sdk/client-s3");
@@ -22,14 +21,14 @@ const config_1 = require("../config");
 const middleware_1 = require("../middleware");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const types_1 = require("../types");
-const web3_js_1 = require("@solana/web3.js");
-const connection = new web3_js_1.Connection((_a = process.env.RPC_URL) !== null && _a !== void 0 ? _a : "");
+// import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+// const connection = new Connection(process.env.RPC_URL ?? "");
 const PARENT_WALLET_ADDRESS = "dvHhZyzmZcnnZpgaosVkdxRZ7s3yvLrYcZJvMHFaMEz";
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
 const s3Client = new client_s3_1.S3Client({
     credentials: {
-        accessKeyId: (_b = process.env.ACCESS_KEY_ID) !== null && _b !== void 0 ? _b : "",
-        secretAccessKey: (_c = process.env.ACCESS_SECRET) !== null && _c !== void 0 ? _c : "",
+        accessKeyId: (_a = process.env.ACCESS_KEY_ID) !== null && _a !== void 0 ? _a : "",
+        secretAccessKey: (_b = process.env.ACCESS_SECRET) !== null && _b !== void 0 ? _b : "",
     },
     region: "eu-north-1"
 });
@@ -87,7 +86,6 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
     });
 }));
 router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f;
     //@ts-ignore
     const userId = req.userId;
     // validate the inputs from the user;
@@ -103,25 +101,25 @@ router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0
             message: "You've sent the wrong inputs"
         });
     }
-    const transaction = yield connection.getTransaction(parseData.data.signature, {
-        maxSupportedTransactionVersion: 1
-    });
-    console.log(transaction);
-    if (((_b = (_a = transaction === null || transaction === void 0 ? void 0 : transaction.meta) === null || _a === void 0 ? void 0 : _a.postBalances[1]) !== null && _b !== void 0 ? _b : 0) - ((_d = (_c = transaction === null || transaction === void 0 ? void 0 : transaction.meta) === null || _c === void 0 ? void 0 : _c.preBalances[1]) !== null && _d !== void 0 ? _d : 0) !== 100000000) {
-        return res.status(411).json({
-            message: "Transaction signature/amount incorrect"
-        });
-    }
-    if (((_e = transaction === null || transaction === void 0 ? void 0 : transaction.transaction.message.getAccountKeys().get(1)) === null || _e === void 0 ? void 0 : _e.toString()) !== PARENT_WALLET_ADDRESS) {
-        return res.status(411).json({
-            message: "Transaction sent to wrong address"
-        });
-    }
-    if (((_f = transaction === null || transaction === void 0 ? void 0 : transaction.transaction.message.getAccountKeys().get(0)) === null || _f === void 0 ? void 0 : _f.toString()) !== (user === null || user === void 0 ? void 0 : user.address)) {
-        return res.status(411).json({
-            message: "Transaction sent to wrong address"
-        });
-    }
+    // const transaction = await connection.getTransaction(parseData.data.signature, {
+    //     maxSupportedTransactionVersion: 1
+    // });
+    // console.log(transaction);
+    // if ((transaction?.meta?.postBalances[1] ?? 0) - (transaction?.meta?.preBalances[1] ?? 0) !== 100000000) {
+    //     return res.status(411).json({
+    //         message: "Transaction signature/amount incorrect"
+    //     })
+    // }
+    // if (transaction?.transaction.message.getAccountKeys().get(1)?.toString() !== PARENT_WALLET_ADDRESS) {
+    //     return res.status(411).json({
+    //         message: "Transaction sent to wrong address"
+    //     })
+    // }
+    // if (transaction?.transaction.message.getAccountKeys().get(0)?.toString() !== user?.address) {
+    //     return res.status(411).json({
+    //         message: "Transaction sent to wrong address"
+    //     })
+    // }
     // was this money paid by this user address or a different address?
     // parse the signature here to ensure the person has paid 0.1 SOL
     // const transaction = Transaction.from(parseData.data.signature);
@@ -167,15 +165,19 @@ router.get("/presignedUrl", middleware_1.authMiddleware, (req, res) => __awaiter
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { publicKey, signature } = req.body;
     const message = new TextEncoder().encode("Sign into mechanical turks");
-    const result = tweetnacl_1.default.sign.detached.verify(message, new Uint8Array(signature.data), new web3_js_1.PublicKey(publicKey).toBytes());
-    if (!result) {
-        return res.status(411).json({
-            message: "Incorrect signature"
-        });
-    }
+    // const result = nacl.sign.detached.verify(
+    //     message,
+    //     new Uint8Array(signature.data),
+    //     new PublicKey(publicKey).toBytes(),
+    // );
+    // if (!result) {
+    //     return res.status(411).json({
+    //         message: "Incorrect signature"
+    //     })
+    // }
     const existingUser = yield prismaClient.user.findFirst({
         where: {
-            address: publicKey
+            address: PARENT_WALLET_ADDRESS
         }
     });
     if (existingUser) {
@@ -189,7 +191,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     else {
         const user = yield prismaClient.user.create({
             data: {
-                address: publicKey,
+                address: PARENT_WALLET_ADDRESS,
             }
         });
         const token = jsonwebtoken_1.default.sign({

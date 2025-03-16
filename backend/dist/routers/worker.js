@@ -11,9 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-const tweetnacl_1 = __importDefault(require("tweetnacl"));
 const client_1 = require("@prisma/client");
 const express_1 = require("express");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -21,11 +19,8 @@ const middleware_1 = require("../middleware");
 const config_1 = require("../config");
 const db_1 = require("../db");
 const types_1 = require("../types");
-const web3_js_1 = require("@solana/web3.js");
-const privateKey_1 = require("../privateKey");
-const bs58_1 = __importDefault(require("bs58"));
 // import  { decode }  from "bs58";
-const connection = new web3_js_1.Connection((_a = process.env.RPC_URL) !== null && _a !== void 0 ? _a : "");
+// const connection = new Connection(process.env.RPC_URL ?? "");
 const TOTAL_SUBMISSIONS = 100;
 const prismaClient = new client_1.PrismaClient();
 prismaClient.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
@@ -46,25 +41,30 @@ router.post("/payout", middleware_1.workerMiddleware, (req, res) => __awaiter(vo
             message: "User not found"
         });
     }
-    const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
-        fromPubkey: new web3_js_1.PublicKey("dvHhZyzmZcnnZpgaosVkdxRZ7s3yvLrYcZJvMHFaMEz"),
-        toPubkey: new web3_js_1.PublicKey(worker.address),
-        lamports: 1000000000 * worker.pending_amount / config_1.TOTAL_DECIMALS,
-    }));
+    // const transaction = new Transaction().add(
+    //     SystemProgram.transfer({
+    //         fromPubkey: new PublicKey("dvHhZyzmZcnnZpgaosVkdxRZ7s3yvLrYcZJvMHFaMEz"),
+    //         toPubkey: new PublicKey(worker.address),
+    //         lamports: 1000_000_000 * worker.pending_amount / TOTAL_DECIMALS,
+    //     })
+    // );
     console.log(worker.address);
-    const keypair = web3_js_1.Keypair.fromSecretKey(bs58_1.default.decode(privateKey_1.privateKey));
+    // const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
     // TODO: There's a double spending problem here
     // The user can request the withdrawal multiple times
     // Can u figure out a way to fix it?
     let signature = "";
-    try {
-        signature = yield (0, web3_js_1.sendAndConfirmTransaction)(connection, transaction, [keypair]);
-    }
-    catch (e) {
-        return res.json({
-            message: "Transaction failed"
-        });
-    }
+    // try {
+    //     signature = await sendAndConfirmTransaction(
+    //         connection,
+    //         transaction,
+    //         [keypair],
+    //     );
+    //  } catch(e) {
+    //     return res.json({
+    //         message: "Transaction failed"
+    //     })
+    //  }
     console.log(signature);
     // We should add a lock here
     yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -172,12 +172,16 @@ router.get("/nextTask", middleware_1.workerMiddleware, (req, res) => __awaiter(v
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { publicKey, signature } = req.body;
     const message = new TextEncoder().encode("Sign into mechanical turks as a worker");
-    const result = tweetnacl_1.default.sign.detached.verify(message, new Uint8Array(signature.data), new web3_js_1.PublicKey(publicKey).toBytes());
-    if (!result) {
-        return res.status(411).json({
-            message: "Incorrect signature"
-        });
-    }
+    // const result = nacl.sign.detached.verify(
+    //     message,
+    //     new Uint8Array(signature.data),
+    //     new PublicKey(publicKey).toBytes(),
+    // );
+    // if (!result) {
+    //     return res.status(411).json({
+    //         message: "Incorrect signature"
+    //     })
+    // }
     const existingUser = yield prismaClient.worker.findFirst({
         where: {
             address: publicKey

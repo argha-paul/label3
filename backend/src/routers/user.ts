@@ -7,9 +7,9 @@ import { JWT_SECRET, TOTAL_DECIMALS } from "../config";
 import { authMiddleware } from "../middleware";
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { createTaskInput } from "../types";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+// import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 
-const connection = new Connection(process.env.RPC_URL ?? "");
+// const connection = new Connection(process.env.RPC_URL ?? "");
 
 const PARENT_WALLET_ADDRESS = "dvHhZyzmZcnnZpgaosVkdxRZ7s3yvLrYcZJvMHFaMEz";
     
@@ -117,29 +117,29 @@ router.post("/task", authMiddleware, async (req, res) => {
         })
     }
 
-    const transaction = await connection.getTransaction(parseData.data.signature, {
-        maxSupportedTransactionVersion: 1
-    });
+    // const transaction = await connection.getTransaction(parseData.data.signature, {
+    //     maxSupportedTransactionVersion: 1
+    // });
 
-    console.log(transaction);
+    // console.log(transaction);
 
-    if ((transaction?.meta?.postBalances[1] ?? 0) - (transaction?.meta?.preBalances[1] ?? 0) !== 100000000) {
-        return res.status(411).json({
-            message: "Transaction signature/amount incorrect"
-        })
-    }
+    // if ((transaction?.meta?.postBalances[1] ?? 0) - (transaction?.meta?.preBalances[1] ?? 0) !== 100000000) {
+    //     return res.status(411).json({
+    //         message: "Transaction signature/amount incorrect"
+    //     })
+    // }
 
-    if (transaction?.transaction.message.getAccountKeys().get(1)?.toString() !== PARENT_WALLET_ADDRESS) {
-        return res.status(411).json({
-            message: "Transaction sent to wrong address"
-        })
-    }
+    // if (transaction?.transaction.message.getAccountKeys().get(1)?.toString() !== PARENT_WALLET_ADDRESS) {
+    //     return res.status(411).json({
+    //         message: "Transaction sent to wrong address"
+    //     })
+    // }
 
-    if (transaction?.transaction.message.getAccountKeys().get(0)?.toString() !== user?.address) {
-        return res.status(411).json({
-            message: "Transaction sent to wrong address"
-        })
-    }
+    // if (transaction?.transaction.message.getAccountKeys().get(0)?.toString() !== user?.address) {
+    //     return res.status(411).json({
+    //         message: "Transaction sent to wrong address"
+    //     })
+    // }
     // was this money paid by this user address or a different address?
 
     // parse the signature here to ensure the person has paid 0.1 SOL
@@ -198,22 +198,22 @@ router.post("/signin", async(req, res) => {
     const { publicKey, signature } = req.body;
     const message = new TextEncoder().encode("Sign into mechanical turks");
 
-    const result = nacl.sign.detached.verify(
-        message,
-        new Uint8Array(signature.data),
-        new PublicKey(publicKey).toBytes(),
-    );
+    // const result = nacl.sign.detached.verify(
+    //     message,
+    //     new Uint8Array(signature.data),
+    //     new PublicKey(publicKey).toBytes(),
+    // );
 
 
-    if (!result) {
-        return res.status(411).json({
-            message: "Incorrect signature"
-        })
-    }
+    // if (!result) {
+    //     return res.status(411).json({
+    //         message: "Incorrect signature"
+    //     })
+    // }
 
     const existingUser = await prismaClient.user.findFirst({
         where: {
-            address: publicKey
+            address: PARENT_WALLET_ADDRESS
         }
     })
 
@@ -228,7 +228,7 @@ router.post("/signin", async(req, res) => {
     } else {
         const user = await prismaClient.user.create({
             data: {
-                address: publicKey,
+                address: PARENT_WALLET_ADDRESS,
             }
         })
 

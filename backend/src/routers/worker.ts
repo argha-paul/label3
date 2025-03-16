@@ -6,12 +6,12 @@ import { workerMiddleware } from "../middleware";
 import { TOTAL_DECIMALS, WORKER_JWT_SECRET } from "../config";
 import { getNextTask } from "../db";
 import { createSubmissionInput } from "../types";
-import { Connection, Keypair, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
+// import { Connection, Keypair, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { privateKey } from "../privateKey";
 import bs58 from 'bs58';
 // import  { decode }  from "bs58";
 
-const connection = new Connection(process.env.RPC_URL ?? "");
+// const connection = new Connection(process.env.RPC_URL ?? "");
 
 const TOTAL_SUBMISSIONS = 100;
 
@@ -42,35 +42,35 @@ router.post("/payout", workerMiddleware, async (req, res) => {
         })
     }
 
-    const transaction = new Transaction().add(
-        SystemProgram.transfer({
-            fromPubkey: new PublicKey("dvHhZyzmZcnnZpgaosVkdxRZ7s3yvLrYcZJvMHFaMEz"),
-            toPubkey: new PublicKey(worker.address),
-            lamports: 1000_000_000 * worker.pending_amount / TOTAL_DECIMALS,
-        })
-    );
+    // const transaction = new Transaction().add(
+    //     SystemProgram.transfer({
+    //         fromPubkey: new PublicKey("dvHhZyzmZcnnZpgaosVkdxRZ7s3yvLrYcZJvMHFaMEz"),
+    //         toPubkey: new PublicKey(worker.address),
+    //         lamports: 1000_000_000 * worker.pending_amount / TOTAL_DECIMALS,
+    //     })
+    // );
 
 
     console.log(worker.address);
 
-    const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+    // const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
 
     // TODO: There's a double spending problem here
     // The user can request the withdrawal multiple times
     // Can u figure out a way to fix it?
     let signature = "";
-    try {
-        signature = await sendAndConfirmTransaction(
-            connection,
-            transaction,
-            [keypair],
-        );
+    // try {
+    //     signature = await sendAndConfirmTransaction(
+    //         connection,
+    //         transaction,
+    //         [keypair],
+    //     );
     
-     } catch(e) {
-        return res.json({
-            message: "Transaction failed"
-        })
-     }
+    //  } catch(e) {
+    //     return res.json({
+    //         message: "Transaction failed"
+    //     })
+    //  }
     
     console.log(signature)
 
@@ -202,17 +202,17 @@ router.post("/signin", async(req, res) => {
     const { publicKey, signature } = req.body;
     const message = new TextEncoder().encode("Sign into mechanical turks as a worker");
 
-    const result = nacl.sign.detached.verify(
-        message,
-        new Uint8Array(signature.data),
-        new PublicKey(publicKey).toBytes(),
-    );
+    // const result = nacl.sign.detached.verify(
+    //     message,
+    //     new Uint8Array(signature.data),
+    //     new PublicKey(publicKey).toBytes(),
+    // );
 
-    if (!result) {
-        return res.status(411).json({
-            message: "Incorrect signature"
-        })
-    }
+    // if (!result) {
+    //     return res.status(411).json({
+    //         message: "Incorrect signature"
+    //     })
+    // }
 
     const existingUser = await prismaClient.worker.findFirst({
         where: {
